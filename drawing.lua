@@ -4,7 +4,12 @@ local drawAddKeybind = ui.new_hotkey("Lua", "B", "Add Point");
 local drawNextName = ui.new_textbox("Lua", "B", "Drawing Name");
 local drawCancelKeybind = ui.new_hotkey("Lua", "B", "Cancel Drawing");
 local drawingTable = database.read("drawingDatabase");
-local drawList = ui.new_listbox("Lua", "B", "Drawing List", drawingTable);
+local drawList;
+if (drawingTable ~= nil and #drawingTable > 0) then
+    drawList = ui.new_listbox("Lua", "B", "Drawing List", drawingTable);
+else
+    drawList = ui.new_listbox("Lua", "B", "Drawing List", "");
+end
 
 local viewDist = 10000;
 
