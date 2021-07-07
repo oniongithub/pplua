@@ -1,3 +1,4 @@
+local ffi = require("ffi");
 local drawEnabled = ui.new_checkbox("Lua", "B", "Drawing Enabled");
 local drawStartNewKeybind = ui.new_hotkey("Lua", "B", "Start New Line");
 local drawAddKeybind = ui.new_hotkey("Lua", "B", "Add Point");
@@ -9,6 +10,28 @@ if (drawingTable ~= nil and #drawingTable > 0) then
     drawList = ui.new_listbox("Lua", "B", "Drawing List", drawingTable);
 else
     drawList = ui.new_listbox("Lua", "B", "Drawing List", "");
+end
+
+local native_GetClipboardTextCount = vtable_bind("vgui2.dll", "VGUI_System010", 7, "int(__thiscall*)(void*)")
+local native_SetClipboardText = vtable_bind("vgui2.dll", "VGUI_System010", 9, "void(__thiscall*)(void*, const char*, int)")
+local native_GetClipboardText = vtable_bind("vgui2.dll", "VGUI_System010", 11, "int(__thiscall*)(void*, int, const char*, int)")
+local new_char_arr = ffi.typeof("char[?]")
+
+local function getClipboard()
+	local len = native_GetClipboardTextCount()
+
+	if len > 0 then
+		local char_arr = new_char_arr(len)
+		native_GetClipboardText(0, char_arr, len)
+		return ffi.string(char_arr, len-1)
+	end
+
+    return "";
+end
+
+local function setClipboard(text)
+	text = tostring(text)
+	native_SetClipboardText(text, string.len(text))
 end
 
 local viewDist = 10000;
@@ -127,7 +150,43 @@ local function loadDrawing()
     end
 end
 
+local function importDrawing()
+    local clipboardText = getClipboard();
+    saveTable = {};
+
+    for line in clipboardText:gmatch("[^\n]+") do -- sisoft
+        local pos = {};
+        for point in line:gmatch("[^,]+") do
+            table.insert(pos, point);
+        end
+
+        if (type(pos) == "table") then
+            table.insert(saveTable, { x = tonumber(pos[1]), y = tonumber(pos[2]), z = tonumber(pos[3]) });
+        end
+    end
+end
+
+local function exportDrawing()
+    if (#saveTable > 1) then
+        local saveText = "";
+
+        for i = 1, #saveTable do
+            if (saveText == "") then
+                saveText = saveTable[i].x .. "," .. saveTable[i].y .. "," .. saveTable[i].z
+            else
+                saveText = saveText .. "\n" .. saveTable[i].x .. "," .. saveTable[i].y .. "," .. saveTable[i].z
+            end
+        end
+
+        if (saveText ~= "") then
+            setClipboard(saveText);
+        end
+    end
+end
+
 local drawLoad = ui.new_button("Lua", "B", "Load Drawing", loadDrawing);
 local drawSave = ui.new_button("Lua", "B", "Save Drawing", saveDrawing);
 local drawAdd = ui.new_button("Lua", "B", "Add Drawing", addDrawing);
 local drawDelete = ui.new_button("Lua", "B", "Delete Drawing", deleteDrawing);
+local drawImport = ui.new_button("Lua", "B", "Import Drawing", importDrawing);
+local drawExport = ui.new_button("Lua", "B", "Export Drawing", exportDrawing);
