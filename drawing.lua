@@ -12,6 +12,7 @@ else
     drawList = ui.new_listbox("Lua", "B", "Drawing List", "");
 end
 
+-- credits to sapphyrus for clipboard stuff
 local native_GetClipboardTextCount = vtable_bind("vgui2.dll", "VGUI_System010", 7, "int(__thiscall*)(void*)")
 local native_SetClipboardText = vtable_bind("vgui2.dll", "VGUI_System010", 9, "void(__thiscall*)(void*, const char*, int)")
 local native_GetClipboardText = vtable_bind("vgui2.dll", "VGUI_System010", 11, "int(__thiscall*)(void*, int, const char*, int)")
